@@ -36,3 +36,4 @@ These hooks ensure that Docker is correctly configured and maintained throughout
 - Linux-based system with `systemd` for service management.
 - Docker installed via the system's package manager.
 - `awk`, `systemctl`, and `groupadd` utilities are required.
+
