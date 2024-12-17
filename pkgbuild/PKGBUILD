@@ -1,72 +1,44 @@
 # Maintainer: Tales A. Mendonça <talesam@gmail.com>
+# Maintainer: Leonardo Berbert <leo4berbert@gmail.com>
 
-pkgname=pkgbuild-template
-pkgdesc="Package template for Communitybig"
-# Uncomment and edit the following lines as needed
-#depends=('')
-#makedepends=('')
-#optdepends=('')
-#conflicts=('')
-#provides=('')
-#replaces=('')
+pkgname=comm-docker-config
 pkgver=$(date +%y.%m.%d)
 pkgrel=$(date +%H%M)
+pkgdesc="Base docker configuration"
 arch=('any')
-license=('MIT')
-url="https://github.com/communitybig/${pkgname}"
+url="https://github.com/communitybig/$pkgname"
+license=('GPL3')
+depends=('coreutils' 'docker' 'docker-compose')
+provides=("$pkgname")
+conflicts=("$pkgname-git" 'podman' 'podman-compose' 'podman-desktop-bin' 'podman-dnsname')
+backup=('etc/default/docker')
+options=('!strip' '!docs')
 source=("git+${url}.git")
 md5sums=('SKIP')
-
-# Automatically detect and use the correct install file
-if [ -e "${pkgname}.install" ]; then
+if [ -e "${pkgname}.install" ];then
     install=${pkgname}.install
-elif [ -e "pkgbuild.install" ]; then
+elif [ -e "pkgbuild.install" ];then
     install=pkgbuild.install
 fi
 
-prepare() {
-    cd "${srcdir}/${pkgname}"
-    # Add any preparation steps here, if needed
-    # For example: patch -p1 < "${srcdir}/patch-file.patch"
-}
-
-build() {
-    cd "${srcdir}/${pkgname}"
-    # Add build steps here, if needed
-    # For example: make
-}
-
-check() {
-    cd "${srcdir}/${pkgname}"
-    # Add check/test steps here, if needed
-    # For example: make check
-}
-
 package() {
-    cd "${srcdir}/${pkgname}"
-
-    # Determine the correct source directory
-    if [ -d "${pkgname}" ]; then
-        srcdir="${srcdir}/${pkgname}/${pkgname}"
+    # Verify default folder
+    if [ -d "${srcdir}/${pkgname}/${pkgname}" ]; then
+        InternalDir="${srcdir}/${pkgname}/${pkgname}"
     else
-        srcdir="${srcdir}/${pkgname}"
+        InternalDir="${srcdir}/${pkgname}"
     fi
 
-    # Install files
-    local dirs=("usr" "etc" "opt")
-    for dir in "${dirs[@]}"; do
-        if [ -d "${srcdir}/${dir}" ]; then
-            cp -a "${srcdir}/${dir}" "${pkgdir}/"
-        fi
-    done
-
-    # Install license file if present
-    if [ -f "LICENSE" ]; then
-        install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    # Copy files
+    if [ -d "${InternalDir}/usr" ]; then
+        cp -r "${InternalDir}/usr" "${pkgdir}/"
     fi
 
-    # Install documentation if present
-    if [ -f "README.md" ]; then
-        install -Dm644 README.md "${pkgdir}/usr/share/doc/${pkgname}/README.md"
+    if [ -d "${InternalDir}/etc" ]; then
+        cp -r "${InternalDir}/etc" "${pkgdir}/"
+    fi
+
+    if [ -d "${InternalDir}/opt" ]; then
+        cp -r "${InternalDir}/opt" "${pkgdir}/"
     fi
 }
