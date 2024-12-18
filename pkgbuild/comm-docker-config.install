@@ -37,18 +37,18 @@ post_upgrade() {
 
 post_remove() {
 
-    # Stop Docker service
+    # Stop Docker service 
     if systemctl is-active --quiet docker.service; then
         echo "Stopping Docker service..."
         systemctl stop docker
     fi
-    # Disable Docker service
+    # Disable Docker service 
     if systemctl is-enabled --quiet docker.service; then
         echo "Disabling Docker service..."
         systemctl disable docker.service
     fi
 
-    # Stop and disable Docker socket
+    # Stop and disable Docker socket 
     if systemctl is-active --quiet docker.socket; then
         echo "Stopping Docker socket..."
         systemctl stop docker.socket
@@ -58,7 +58,7 @@ post_remove() {
         systemctl disable docker.socket
     fi
 
-    # Remove Docker group
+    # Remove Docker group 
     if getent group docker &>/dev/null; then
         echo "Removing Docker group..."
         groupdel docker
