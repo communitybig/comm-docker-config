@@ -36,50 +36,32 @@ post_upgrade() {
 }
 
 post_remove() {
-    declare -a dependent_packages=("docker" "docker-compose")
-    for pkg in "${dependent_packages[@]}"; do
-        if pacman -Qi "$pkg" &>/dev/null; then
-            echo "Removing dependent package: $pkg..."
-            if sudo pacman -Rns --noconfirm "$pkg"; then
-                echo "Successfully removed $pkg."
-            else
-                echo "Warning: Failed to remove $pkg. Continuing with the next steps."
-            fi
-        else
-            echo "Package $pkg is not installed. Skipping..."
-        fi
-    done
 
+    # Stop Docker service
     if systemctl is-active --quiet docker.service; then
         echo "Stopping Docker service..."
-        if systemctl stop docker; then
-            echo "Docker service stopped successfully."
-        else
-            echo "Warning: Failed to stop Docker service."
-        fi
-    else
-        echo "Docker service is not running. Skipping stop step."
+        systemctl stop docker
     fi
-    
+    # Disable Docker service
     if systemctl is-enabled --quiet docker.service; then
         echo "Disabling Docker service..."
-        if systemctl disable docker.service; then
-            echo "Docker service disabled successfully."
-        else
-            echo "Warning: Failed to disable Docker service."
-        fi
-    else
-        echo "Docker service is already disabled. Skipping disable step."
+        systemctl disable docker.service
     fi
 
+    # Stop and disable Docker socket
+    if systemctl is-active --quiet docker.socket; then
+        echo "Stopping Docker socket..."
+        systemctl stop docker.socket
+    fi
+    if systemctl is-enabled --quiet docker.socket; then
+        echo "Disabling Docker socket..."
+        systemctl disable docker.socket
+    fi
+
+    # Remove Docker group
     if getent group docker &>/dev/null; then
         echo "Removing Docker group..."
-        if groupdel docker; then
-            echo "Docker group removed successfully."
-        else
-            echo "Warning: Failed to remove Docker group."
-        fi
-    else
-        echo "Docker group does not exist. Skipping group removal."
+        groupdel docker
     fi
+
 }
