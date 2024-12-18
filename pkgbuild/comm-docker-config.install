@@ -36,14 +36,43 @@ post_upgrade() {
 }
 
 post_remove() {
-    if pacman -Qi docker &> /dev/null; then
-        echo "Docker is installed. The docker.service will not be disabled."
-	exit 1
+    echo "Starting post-remove process..."
+
+    # Remove dependent packages
+    for pkg in docker docker-compose; do
+        if pacman -Qi "$pkg" &> /dev/null; then
+            echo "Removing dependent package: $pkg"
+            if ! sudo pacman -Rns --noconfirm "$pkg"; then
+                echo "Failed to remove $pkg. Continuing with the next steps..."
+            fi
+        else
+            echo "Package $pkg is not installed. Skipping..."
+        fi
+    done
+
+    # Stop the Docker service if it's running
+    if systemctl is-active --quiet docker.service; then
+        echo "Stopping Docker service..."
+        systemctl stop docker
     else
-        systemctl disable docker.service
+        echo "Docker service is not running. Skipping stop step."
     fi
 
-    if getent group docker > /dev/null; then
-        groupdel docker
+    # Disable the Docker service if it's enabled
+    if systemctl is-enabled --quiet docker.service; then
+        echo "Disabling Docker service..."
+        systemctl disable docker.service
+    else
+        echo "Docker service is already disabled. Skipping disable step."
     fi
+
+    # Remove the Docker group if it exists
+    if getent group docker > /dev/null; then
+        echo "Removing Docker group..."
+        groupdel docker
+    else
+        echo "Docker group does not exist. Skipping group removal."
+    fi
+
+    echo "Post-remove process completed."
 }
